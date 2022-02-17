@@ -1,0 +1,69 @@
+Steps to Configure and Run the Microservice:
+
+1) Clone the repository into a local directory or a directory one of the flip servers.
+2) Edit the dbcon.js file to include your phpMyAdmin credentials
+3) Log into phpMyAdmin https://classmysql.engr.oregonstate.edu/
+4) On the "Import" tab, import the useraccount.sql file to create the 'Users' and 'Passwords' tables in your database
+5) Run the following commands to install the dependencies listed in the package.json file:
+    --> npm install assert
+    --> npm install body parser
+    --> npm install express
+    --> npm install mysql
+6) In the app.js file, edit the port number on line 7
+7) Start the server using "node app.js"
+
+How to Make Requests to the Microservice:
+
+It is recommended that you use the node request module to make server-side requests. 
+
+1) Example request to create user acccount within an express route handler:
+app.post('/new-user', function(req, res){
+    request({
+        "url":"http://flip1.engr.oregonstate.edu:[your-selected-port-no]/new-user",
+            "method":"POST",
+            "headers":{
+            "Content-Type":"application/json"
+            },
+            "body":req.body,         // request body should contain the following -- {username:[entered username], password:[entered password]} 
+            json: true
+        }, function(err, response, body){
+            if(!err && response.statusCode < 400){
+                result = body;
+                res.send(result);
+            }else{
+                console.log(err);
+                if(response){
+                    console.log(response.statusCode);
+            }
+        }
+    });
+});
+--> the response body is an object with a single 'user.id' attirbute ex. {'userid':2}
+--> result.user_id will return the integer user_id (res.send cannot send integers) so this should be done on the client-side
+
+2) Example request to 'login' or validate user credentials:
+app.post('/login', function(req, res){
+    request({
+        "url":"http://flip1.engr.oregonstate.edu:[your-selected-port-no]/login",
+            "method":"POST",
+            "headers":{
+            "Content-Type":"application/json"
+            },
+            "body":req.body,            // request body should contain the following -- {username:[entered username], password:[entered password]} 
+            json: true
+        }, function(err, response, body){
+            if(!err && response.statusCode < 400){
+                result = body;
+                res.send(result);       
+            }else{
+            console.log(err);
+            if(response){
+                console.log(response.statusCode);
+            }
+        }
+    });
+});
+--> result.user_id will be set to -1 if the password is invalid
+--> IMPORTANT: If you stop and rerun the server a new initialization vector and key (lines 10 and 11) will be generated and it will not be possible to decrypt previously stored passwords
+--> You can hard-code them in to avoid the issue during development but this is far less secure and not recommended when fully deployed
+
